@@ -54,6 +54,7 @@ struct ipv6_devconf {
 	__s32		accept_ra_rt_info_max_plen;
 #endif
 #endif
+	__s32		accept_ra_rt_table;
 	__s32		accept_source_route;
 	__s32		accept_ra_from_local;
 #ifdef CONFIG_IPV6_OPTIMISTIC_DAD
@@ -148,7 +149,7 @@ static inline void ipv6_set_payload_len(struct ipv6hdr *ip6, unsigned int len)
 	ip6->payload_len = len <= IPV6_MAXPLEN ? htons(len) : 0;
 }
 
-/* 
+/*
    This structure contains results of exthdrs parsing
    as offsets from skb->nh.
  */
