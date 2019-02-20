@@ -19,6 +19,8 @@ obj-$(CONFIG_CPUFREQ_DT_RUST)		+= rcpufreq_dt.o
 obj-$(CONFIG_CPUFREQ_DT_PLATDEV)	+= cpufreq-dt-platdev.o
 obj-$(CONFIG_CPUFREQ_VIRT)		+= virtual-cpufreq.o
 
+obj-$(CONFIG_CPUFREQ_DUMMY)		+= dummy-cpufreq.o
+
 # Traces
 CFLAGS_amd-pstate-trace.o               := -I$(src)
 CFLAGS_powernv-cpufreq.o                := -I$(src)
