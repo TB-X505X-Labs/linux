@@ -62,6 +62,15 @@ config ANDROID_BINDER_ALLOC_KUNIT_TEST
 	  test-specific freelist, which allows this KUnit module to be loaded
 	  for testing without interfering with a running system.
 
+config ANDROID_VENDOR_HOOKS
+	bool "Android Vendor Hooks"
+	depends on TRACEPOINTS
+	help
+	  Enable vendor hooks implemented as tracepoints
+
+	  Allow vendor modules to attach to tracepoint "hooks" defined via
+	  DECLARE_HOOK or DECLARE_RESTRICTED_HOOK.
+
 config ANDROID_DEBUG_KINFO
 	bool "Android Debug Kernel Information Support"
 	depends on KALLSYMS
