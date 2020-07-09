@@ -42,6 +42,8 @@
 #include <linux/thread_info.h>
 #include <linux/prctl.h>
 #include <linux/stacktrace.h>
+#include <trace/hooks/mpam.h>
+#include <trace/hooks/fpsimd.h>
 
 #include <asm/alternative.h>
 #include <asm/arch_timer.h>
@@ -782,6 +784,12 @@ struct task_struct *__switch_to(struct task_struct *prev,
 	gcs_thread_switch(next);
 
 	/*
+	 *  vendor hook is needed before the dsb(),
+	 *  because MPAM is related to cache maintenance.
+	 */
+	trace_android_vh_mpam_set(prev, next);
+
+	/*
 	 * Complete any pending TLB or cache maintenance on this CPU in case the
 	 * thread migrates to a different CPU. This full barrier is also
 	 * required by the membarrier system call. Additionally it makes any
@@ -805,6 +813,8 @@ struct task_struct *__switch_to(struct task_struct *prev,
 	 * use prev's MPAM settings.
 	 */
 	mpam_thread_switch(next);
+
+	trace_android_vh_is_fpsimd_save(prev, next);
 
 	/* the actual thread switch */
 	last = cpu_switch_to(prev, next);
