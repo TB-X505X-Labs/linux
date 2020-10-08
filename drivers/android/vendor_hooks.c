@@ -14,6 +14,7 @@
 #include <trace/hooks/iommu.h>
 #include <trace/hooks/vmscan.h>
 #include <trace/hooks/syscall_check.h>
+#include <trace/hooks/sysrqcrash.h>
 #include <trace/hooks/fpsimd.h>
 
 /*
