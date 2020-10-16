@@ -62,4 +62,16 @@ config ANDROID_BINDER_ALLOC_KUNIT_TEST
 	  test-specific freelist, which allows this KUnit module to be loaded
 	  for testing without interfering with a running system.
 
+config ANDROID_DEBUG_KINFO
+	bool "Android Debug Kernel Information Support"
+	depends on KALLSYMS
+	help
+	  This supports kernel information backup for bootloader usage.
+	  Specifics:
+	   - The kallsyms symbols for unwind_backtrace
+	   - Page directory pointer
+	   - UTS_RELEASE
+	   - BUILD_INFO(ro.build.fingerprint)
+
+
 endmenu
