@@ -419,6 +419,7 @@ struct module {
 	/* Exported symbols */
 	const struct kernel_symbol *syms;
 	const u32 *crcs;
+	const char *scmversion;
 	const u8 *flagstab;
 	unsigned int num_syms;
 

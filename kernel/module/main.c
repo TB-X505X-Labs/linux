@@ -604,6 +604,7 @@ static const struct module_attribute modinfo_##field = {              \
 
 MODINFO_ATTR(version);
 MODINFO_ATTR(srcversion);
+MODINFO_ATTR(scmversion);
 
 static void setup_modinfo_import_ns(struct module *mod, const char *s)
 {
@@ -1056,6 +1057,7 @@ static const struct module_attribute modinfo_datasize =
 	__ATTR(datasize, 0444, show_datasize, NULL);
 #endif
 
+	&modinfo_scmversion,
 static ssize_t show_initsize(const struct module_attribute *mattr,
 			     struct module_kobject *mk, char *buffer)
 {
