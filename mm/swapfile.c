@@ -1595,6 +1595,7 @@ static void swap_put_entries_cluster(struct swap_info_struct *si,
 			offset = round_up(offset, abs(nr_reclaimed));
 	} while (offset < end);
 }
+EXPORT_SYMBOL_GPL(get_swap_device);
 
 /* Increase the swap count of one slot. */
 static int __swap_cluster_dup_entry(struct swap_cluster_info *ci,
@@ -3692,6 +3693,7 @@ void si_swapinfo(struct sysinfo *val)
 	val->totalswap = total_swap_pages + nr_to_be_unused;
 	spin_unlock(&swap_lock);
 }
+EXPORT_SYMBOL_NS_GPL(si_swapinfo, "MINIDUMP");
 
 /*
  * swap_dup_entry_direct() - Increase reference count of a swap entry by one.

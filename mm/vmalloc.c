@@ -1059,6 +1059,7 @@ get_subtree_max_size(struct rb_node *node)
 	va = rb_entry_safe(node, struct vmap_area, rb_node);
 	return va ? va->subtree_max_size : 0;
 }
+EXPORT_SYMBOL_NS_GPL(vmalloc_nr_pages, "MINIDUMP");
 
 RB_DECLARE_CALLBACKS_MAX(static, free_vmap_area_rb_augment_cb,
 	struct vmap_area, rb_node, unsigned long, subtree_max_size, va_size)
