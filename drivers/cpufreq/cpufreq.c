@@ -2716,6 +2716,7 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 
 	return ret;
 }
+EXPORT_TRACEPOINT_SYMBOL_GPL(cpu_frequency_limits);
 
 static void cpufreq_policy_refresh(struct cpufreq_policy *policy)
 {
