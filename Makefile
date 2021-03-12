@@ -1074,7 +1074,13 @@ KBUILD_LDFLAGS += $(call ld-option,--lto-whole-program-visibility -mllvm -always
 else
 CC_FLAGS_LTO	:= -flto
 endif
+
+ifeq ($(SRCARCH),x86)
+# Workaround for compiler / linker bug
 CC_FLAGS_LTO	+= -fvisibility=hidden
+else
+CC_FLAGS_LTO	+= -fvisibility=default
+endif
 
 # Limit inlining across translation units to reduce binary size
 KBUILD_LDFLAGS += -mllvm -import-instr-limit=5
