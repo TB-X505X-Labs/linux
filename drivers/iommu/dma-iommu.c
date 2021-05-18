@@ -34,6 +34,7 @@
 #include <linux/swiotlb.h>
 #include <linux/vmalloc.h>
 #include <trace/events/swiotlb.h>
+#include <trace/hooks/iommu.h>
 
 #include "dma-iommu.h"
 #include "iommu-pages.h"
@@ -800,6 +801,7 @@ static dma_addr_t iommu_dma_alloc_iova(struct iommu_domain *domain,
 
 	iova = alloc_iova_fast(iovad, iova_len, dma_limit >> shift, true);
 done:
+	trace_android_vh_iommu_iovad_alloc_iova(dev, iovad, (dma_addr_t)iova << shift, size);
 	return (dma_addr_t)iova << shift;
 }
 
@@ -818,6 +820,8 @@ static void iommu_dma_free_iova(struct iommu_domain *domain, dma_addr_t iova,
 	else
 		free_iova_fast(iovad, iova_pfn(iovad, iova),
 				size >> iova_shift(iovad));
+
+	trace_android_vh_iommu_iovad_free_iova(iovad, iova, size);
 }
 
 static void __iommu_dma_unmap(struct device *dev, dma_addr_t dma_addr,
