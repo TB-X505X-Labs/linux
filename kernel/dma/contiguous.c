@@ -54,6 +54,7 @@
 
 static struct cma *dma_contiguous_areas[MAX_CMA_AREAS];
 static unsigned int dma_contiguous_areas_num;
+EXPORT_SYMBOL_GPL(dma_contiguous_default_area);
 
 static int dma_contiguous_insert_area(struct cma *cma)
 {
