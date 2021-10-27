@@ -39,6 +39,7 @@
 #include "remoteproc_internal.h"
 
 #define HIGH_BITS_MASK 0xFFFFFFFF00000000ULL
+#include <trace/hooks/remoteproc.h>
 
 static DEFINE_MUTEX(rproc_list_mutex);
 static LIST_HEAD(rproc_list);
@@ -1887,6 +1888,8 @@ static void rproc_crash_handler_work(struct work_struct *work)
 		rproc_trigger_recovery(rproc);
 
 out:
+	trace_android_vh_rproc_recovery(rproc);
+
 	pm_relax(rproc->dev.parent);
 }
 
