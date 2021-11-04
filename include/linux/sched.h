@@ -345,6 +345,7 @@ extern int __must_check io_schedule_prepare(void);
 extern void io_schedule_finish(int token);
 extern long io_schedule_timeout(long timeout);
 extern void io_schedule(void);
+extern int select_fallback_rq(int cpu, struct task_struct *p);
 
 /* wrapper functions to trace from this header file */
 DECLARE_TRACEPOINT(sched_set_state_tp);
