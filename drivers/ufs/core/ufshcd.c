@@ -2720,6 +2720,15 @@ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
 static void ufshcd_sgl_to_prdt(struct ufs_hba *hba, struct ufshcd_lrb *lrbp, int sg_entries,
 			       struct scatterlist *sg_list)
 {
+	/*
+	 * TODO(b/160883801): remove this vendor hook in favor of the upstream
+	 * variant op.  This isn't possible yet because the upstream variant op
+	 * doesn't yet make it possible for the host driver to get the keyslot.
+	 */
+	err = 0;
+	trace_android_vh_ufs_fill_prdt(hba, lrbp, sg_segments, &err);
+	if (err)
+		return err;
 	struct ufshcd_sg_entry *prd;
 	struct scatterlist *sg;
 	int i;
