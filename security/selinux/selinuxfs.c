@@ -156,6 +156,10 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 		goto out;
 
 	new_value = !!scan_value;
+	/* x505 bring-up: force permissive regardless of userspace request */
+	if (new_value)
+		pr_warn_once("SELinux: x505 bring-up kernel, ignoring request to enforce\n");
+	new_value = 0;
 
 	old_value = enforcing_enabled();
 	if (new_value != old_value) {
