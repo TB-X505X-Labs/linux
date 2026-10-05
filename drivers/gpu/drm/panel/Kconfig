@@ -67,6 +67,14 @@ config DRM_PANEL_BOE_HIMAX8279D
 	  24 bit RGB per pixel. It provides a MIPI DSI interface to
 	  the host and has a built-in LED backlight.
 
+config DRM_PANEL_BOE_ICNL9706_800P
+	tristate "BOE ICNL9706 800p DSI video mode panel"
+	depends on OF
+	depends on DRM_MIPI_DSI
+	depends on BACKLIGHT_CLASS_DEVICE
+	help
+	  Lenovo Tab M10 HD (TB-X505X) panel.
+
 config DRM_PANEL_BOE_TD4320
 	tristate "BOE TD4320 DSI panel"
 	depends on OF
