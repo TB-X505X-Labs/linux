@@ -5214,6 +5214,17 @@ static const struct address_space_operations shmem_aops = {
 	.error_remove_folio = shmem_error_remove_folio,
 };
 
+#ifdef CONFIG_MEMFD_CREATE
+#include "x505-ashmem.h"
+/* x505: route ashmem ioctls on memfds to the compat shim (libcutils requires it) */
+static long x505_shmem_ashmem_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	if (strncmp(file->f_path.dentry->d_name.name, "memfd:", 6))
+		return -ENOTTY;
+	return ashmem_memfd_ioctl(file, cmd, arg);
+}
+#endif
+
 static const struct file_operations shmem_file_operations = {
 	.mmap_prepare	= shmem_mmap_prepare,
 	.open		= shmem_file_open,
@@ -5227,6 +5238,12 @@ static const struct file_operations shmem_file_operations = {
 	.splice_write	= iter_file_splice_write,
 	.fallocate	= shmem_fallocate,
 	.setlease	= generic_setlease,
+#endif
+#ifdef CONFIG_MEMFD_CREATE
+	.unlocked_ioctl	= x505_shmem_ashmem_ioctl,
+#ifdef CONFIG_COMPAT
+	.compat_ioctl	= x505_shmem_ashmem_ioctl,
+#endif
 #endif
 };
 
