@@ -189,3 +189,7 @@
 		bias-disable;
 	};
 };
+
+&gpu {
+	compatible = "qcom,adreno-504.0", "qcom,adreno";
+};
