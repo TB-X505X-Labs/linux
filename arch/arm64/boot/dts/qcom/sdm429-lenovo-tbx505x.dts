@@ -121,6 +121,15 @@
 		regulator-boot-on;
 	};
 
+	panel_vcc: panel-vcc-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "panel_vcc";
+		gpio = <&tlmm 17 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
 	vph_pwr: vph-pwr-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "vph_pwr";
@@ -156,6 +165,41 @@
 		touchscreen-size-x = <800>;
 		touchscreen-size-y = <1280>;
 	};
+};
+
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&pm8953_l23>;
+	vddio-supply = <&pm8953_l6>;
+
+	status = "okay";
+
+	panel@0 {
+		compatible = "boe,icnl9706-800p";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 60 GPIO_ACTIVE_LOW>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi0_phy {
+	vddio-supply = <&pm8953_l6>;
+
+	status = "okay";
 };
 
 &pm8953_resin {
