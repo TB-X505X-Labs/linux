@@ -21,6 +21,24 @@
 	qcom,msm-id = <QCOM_ID_SDM429 0>;
 	qcom,board-id = <QCOM_BOARD_ID_MTP 2>;
 
+	firmware {
+		android {
+			compatible = "android,firmware";
+
+			fstab {
+				compatible = "android,fstab";
+
+				vendor {
+					compatible = "android,vendor";
+					dev = "/dev/block/by-name/vendor";
+					type = "ext4";
+					mnt_flags = "ro,barrier=1,discard";
+					fsmgr_flags = "wait";
+				};
+			};
+		};
+	};
+
 	chosen {
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -432,7 +450,7 @@
 	};
 
 	hall_sensor_default: hall-sensor-default-state {
-		pins = "gpio43";
+		pins = "gpio41";
 		function = "gpio";
 		drive-strength = <6>;
 		bias-pull-up;
