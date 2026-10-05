@@ -143,6 +143,7 @@ struct pll_12nm_cached_state {
 };
 
 struct dsi_pll_12nm {
+	unsigned long vco_cached_rate;
 	struct clk_hw clk_hw;
 
 	struct msm_dsi_phy *phy;
@@ -521,7 +522,8 @@ static int dsi_pll_12nm_clk_set_rate(struct clk_hw *hw, unsigned long rate,
 	unsigned int post_div_mux = 0;
 	struct dsi_pll_config config;
 	char data = 0;
-	pr_err("dsi_pll_12nm_clk_set_rate\n");
+	pr_err("dsi_pll_12nm_clk_set_rate %lu\n", rate);
+	pll_12nm->vco_cached_rate = rate;
 	pll_12nm_setup_config(&config);
 
 	config.vco_current_rate = rate;
@@ -618,7 +620,7 @@ static unsigned long dsi_pll_12nm_clk_recalc_rate(struct clk_hw *hw,
 {
 	struct dsi_pll_12nm *pll_12nm = to_pll_12nm(hw);
 	void __iomem *base = pll_12nm->phy->pll_base;
-	unsigned long vco_current_rate = clk_hw_get_rate(hw);
+	unsigned long vco_current_rate = pll_12nm->vco_cached_rate;
 	const u64 ref_clk = VCO_REF_CLK_RATE;
 	u64 vco_rate = 0;
 	u32 m_div_5_0 = 0, m_div_11_6 = 0, m_div = 0;
