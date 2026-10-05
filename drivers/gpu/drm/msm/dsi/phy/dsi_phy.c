@@ -144,6 +144,25 @@ int msm_dsi_dphy_timing_calc(struct msm_dsi_dphy_timing *timing,
 	return 0;
 }
 
+int msm_dsi_dphy_timing_calc_v1_2(struct msm_dsi_dphy_timing *timing,
+				  struct msm_dsi_phy_clk_request *clk_req)
+{
+	if (!clk_req->bitclk_rate || !clk_req->escclk_rate)
+		return -EINVAL;
+
+	/* TB-X505X BOE ICNL9706: qcom,mdss-dsi-panel-timings-phy-12nm */
+	timing->clk_zero = 0x0b;
+	timing->clk_trail = 0x07;
+	timing->clk_post = 0x0a;
+	timing->clk_rqst = 0x03;
+	timing->hs_zero = 0x00;
+	timing->hs_trail = 0x05;
+	timing->hs_rqst = 0x03;
+	timing->hs_exit = 0x04;
+
+	return 0;
+}
+
 int msm_dsi_dphy_timing_calc_v2(struct msm_dsi_dphy_timing *timing,
 				struct msm_dsi_phy_clk_request *clk_req)
 {
@@ -548,6 +567,10 @@ static const struct of_device_id dsi_phy_dt_match[] = {
 	{ .compatible = "qcom,sm6150-dsi-phy-14nm",
 	  .data = &dsi_phy_14nm_6150_cfgs },
 #endif
+#ifdef CONFIG_DRM_MSM_DSI_12NM_PHY
+	{ .compatible = "qcom,dsi-phy-12nm",
+	  .data = &dsi_phy_12nm_cfgs },
+#endif
 #ifdef CONFIG_DRM_MSM_DSI_10NM_PHY
 	{ .compatible = "qcom,dsi-phy-10nm",
 	  .data = &dsi_phy_10nm_cfgs },
@@ -764,6 +787,9 @@ int msm_dsi_phy_enable(struct msm_dsi_phy *phy,
 		goto phy_en_fail;
 	}
 
+	if (phy->cfg->ops.hstx_drv_ctrl)
+		phy->cfg->ops.hstx_drv_ctrl(phy, true);
+
 	memcpy(shared_timings, &phy->timing.shared_timings,
 	       sizeof(*shared_timings));
 
@@ -799,6 +825,9 @@ void msm_dsi_phy_disable(struct msm_dsi_phy *phy)
 {
 	if (!phy || !phy->cfg->ops.disable)
 		return;
+
+	if (phy->cfg->ops.hstx_drv_ctrl)
+		phy->cfg->ops.hstx_drv_ctrl(phy, false);
 
 	phy->cfg->ops.disable(phy);
 
