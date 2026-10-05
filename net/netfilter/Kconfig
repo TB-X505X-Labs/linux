@@ -1513,6 +1513,17 @@ config NETFILTER_XT_MATCH_QUOTA
 	  If you want to compile it as a module, say M here and read
 	  <file:Documentation/kbuild/modules.rst>.  If unsure, say `N'.
 
+config NETFILTER_XT_MATCH_QUOTA2
+	tristate '"quota2" match support'
+	depends on NETFILTER_ADVANCED
+	help
+	  Android quota2 match (named byte counters), used by netd.
+
+config NETFILTER_XT_MATCH_QUOTA2_LOG
+	bool '"quota2" Netfilter LOG support'
+	depends on NETFILTER_XT_MATCH_QUOTA2
+	default n
+
 config NETFILTER_XT_MATCH_RATEEST
 	tristate '"rateest" match support'
 	depends on NETFILTER_ADVANCED
