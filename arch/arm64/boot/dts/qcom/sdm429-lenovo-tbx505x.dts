@@ -698,22 +698,6 @@
 		bias-disable;
 	};
 
-	/* External speaker PA — GPIO 48 */
-	ext_spk_pa_default: ext-spk-pa-default-state {
-		pins = "gpio48";
-		function = "gpio";
-		drive-strength = <8>;
-		bias-disable;
-		output-high;
-	};
-
-	ext_spk_pa_sleep: ext-spk-pa-sleep-state {
-		pins = "gpio48";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-		output-low;
-	};
 
 	/*
 	 * Quinary MI2S — for WSA speaker path if needed later.
