@@ -1854,7 +1854,7 @@ static int gc5035_probe(struct i2c_client *client)
 		dev_warn(dev, "mclk rate set to %lu instead of requested %u\n",
 			 gc5035->mclk_rate, freq);
 
-	gc5035->pwdn_gpio = devm_gpiod_get(dev, "pwdn", GPIOD_OUT_HIGH);
+	gc5035->pwdn_gpio = devm_gpiod_get_optional(dev, "pwdn", GPIOD_OUT_HIGH);
 	if (IS_ERR(gc5035->pwdn_gpio))
 		return dev_err_probe(dev, PTR_ERR(gc5035->pwdn_gpio),
 				     "Failed to get pwdn-gpios\n");
