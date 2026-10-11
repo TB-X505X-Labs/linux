@@ -245,6 +245,10 @@
 
 &pmi632_charger {
 	#cooling-cells = <2>;
+	io-channels = <&pmi632_adc ADC5_USB_IN_I>,
+		      <&pmi632_adc ADC5_USB_IN_V_16>,
+		      <&pmi632_adc ADC5_VBAT_SNS>;
+	io-channel-names = "usbin_i", "usbin_v", "vbat";
 	monitored-battery = <&battery>;
 	qcom,batt-id-pullup-ohms = <100000>;
 	qcom,auto-recharge-microvolt = <4350000>;
