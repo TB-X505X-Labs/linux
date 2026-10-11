@@ -1347,7 +1347,7 @@ static int hi556_probe(struct i2c_client *client)
 				     "failed to get clock\n");
 
 	freq = clk_get_rate(hi556->clk);
-	if (freq != HI556_MCLK)
+	if (freq != HI556_MCLK && freq != 24000000)
 		return dev_err_probe(hi556->dev, -EINVAL,
 				     "external clock %lu is not supported\n",
 				     freq);
@@ -1362,7 +1362,7 @@ static int hi556_probe(struct i2c_client *client)
 		return dev_err_probe(hi556->dev, ret,
 				     "failed to get regulators\n");
 
-	full_power = acpi_dev_state_d0(hi556->dev);
+	full_power = !has_acpi_companion(hi556->dev) || acpi_dev_state_d0(hi556->dev);
 	if (full_power) {
 		/* Ensure non ACPI managed resources are enabled */
 		ret = hi556_resume(hi556->dev);
@@ -1437,10 +1437,17 @@ static const struct acpi_device_id hi556_acpi_ids[] = {
 MODULE_DEVICE_TABLE(acpi, hi556_acpi_ids);
 #endif
 
+static const struct of_device_id hi556_of_match[] = {
+	{ .compatible = "hynix,hi556" },
+	{ }
+};
+MODULE_DEVICE_TABLE(of, hi556_of_match);
+
 static struct i2c_driver hi556_i2c_driver = {
 	.driver = {
 		.name = "hi556",
 		.acpi_match_table = ACPI_PTR(hi556_acpi_ids),
+		.of_match_table = of_match_ptr(hi556_of_match),
 		.pm = pm_sleep_ptr(&hi556_pm_ops),
 	},
 	.probe = hi556_probe,
