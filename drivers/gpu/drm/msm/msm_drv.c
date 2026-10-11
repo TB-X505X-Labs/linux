@@ -68,9 +68,15 @@ bool msm_gpu_no_components(void)
 
 static int msm_drm_uninit(struct device *dev, const struct component_ops *gpu_ops)
 {
-	struct platform_device *pdev = to_platform_device(dev);
-	struct msm_drm_private *priv = platform_get_drvdata(pdev);
-	struct drm_device *ddev = priv->dev;
+	struct msm_drm_private *priv;
+	struct drm_device *ddev;
+
+	/* GPU-only mode stores adreno_smmu_priv in driver data. */
+	if (gpu_ops)
+		priv = dev_to_gpu(dev)->dev->dev_private;
+	else
+		priv = dev_get_drvdata(dev);
+	ddev = priv->dev;
 
 	/*
 	 * Shutdown the hw if we're far enough along where things might be on.
