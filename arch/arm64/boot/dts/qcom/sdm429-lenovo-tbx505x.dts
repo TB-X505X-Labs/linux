@@ -746,6 +746,80 @@
 		bias-disable;
 		output-low;
 	};
+
+	cam_sensor_rear_default: cam-sensor-rear-default-state {
+		pins = "gpio36";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	cam_sensor_front_default: cam-sensor-front-default-state {
+		pins = "gpio38", "gpio132";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+};
+
+&camss {
+	vdda-supply = <&pm8953_l2>;
+	status = "okay";
+
+	ports {
+		port@0 {
+			reg = <0>;
+
+			csiphy0_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1>;
+				remote-endpoint = <&rear_cam_ep>;
+			};
+		};
+	};
+};
+
+&cci {
+	pinctrl-0 = <&cci0_default>, <&cci1_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&cci_i2c0 {
+	rear_cam: camera@37 {
+		compatible = "galaxycore,gc5035";
+		reg = <0x37>;
+
+		resetb-gpios = <&tlmm 36 GPIO_ACTIVE_LOW>;
+
+		pinctrl-0 = <&cam_sensor_rear_default>, <&camss_mclk0_default>;
+		pinctrl-names = "default";
+
+		clocks = <&gcc GCC_CAMSS_MCLK0_CLK>;
+		clock-names = "mclk";
+		clock-frequency = <24000000>;
+
+		iovdd-supply = <&pm8953_l6>;
+		avdd28-supply = <&pm8953_l22>;
+		dvdd12-supply = <&pm8953_l3>;
+
+		orientation = <1>;
+		rotation = <270>;
+
+		port {
+			rear_cam_ep: endpoint {
+				data-lanes = <0 1>;
+				link-frequencies = /bits/ 64 <438000000>;
+				remote-endpoint = <&csiphy0_ep>;
+			};
+		};
+	};
+
+	actuator@c {
+		compatible = "dongwoon,dw9714";
+		reg = <0x0c>;
+		vcc-supply = <&pm8953_l17>;
+	};
 };
 
 &usb {
