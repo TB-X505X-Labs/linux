@@ -1061,10 +1061,7 @@ static void a5xx_destroy(struct msm_gpu *gpu)
 		drm_gem_object_put(a5xx_gpu->gpmu_bo);
 	}
 
-	if (a5xx_gpu->shadow_bo) {
-		msm_gem_unpin_iova(a5xx_gpu->shadow_bo, gpu->vm);
-		drm_gem_object_put(a5xx_gpu->shadow_bo);
-	}
+	msm_gem_kernel_put(a5xx_gpu->shadow_bo, gpu->vm);
 
 	adreno_gpu_cleanup(adreno_gpu);
 	kfree(a5xx_gpu);
