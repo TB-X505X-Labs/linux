@@ -69,6 +69,24 @@
 		};
 	};
 
+	speaker_left: audio-amplifier-left {
+		compatible = "awinic,aw8738";
+		mode-gpios = <&tlmm 48 GPIO_ACTIVE_HIGH>;
+		awinic,mode = <2>;
+		sound-name-prefix = "Speaker Left";
+		pinctrl-0 = <&speaker_left_default>;
+		pinctrl-names = "default";
+	};
+
+	speaker_right: audio-amplifier-right {
+		compatible = "awinic,aw8738";
+		mode-gpios = <&tlmm 19 GPIO_ACTIVE_HIGH>;
+		awinic,mode = <2>;
+		sound-name-prefix = "Speaker Right";
+		pinctrl-0 = <&speaker_right_default>;
+		pinctrl-names = "default";
+	};
+
 	battery: battery {
 		compatible = "simple-battery";
 		voltage-min-design-microvolt = <3400000>;
@@ -592,7 +610,14 @@
 	status = "okay";
 	model = "tbx505x-audio";
 
+	aux-devs = <&speaker_left>, <&speaker_right>;
+	widgets = "Speaker", "Speakers";
+	pin-switches = "Speakers";
 	audio-routing =
+		"Speakers", "Speaker Left OUT",
+		"Speakers", "Speaker Right OUT",
+		"Speaker Left IN", "HPH_L",
+		"Speaker Right IN", "HPH_R",
 		"Headphone Jack", "HPH_L",
 		"Headphone Jack", "HPH_R",
 		"AMIC1", "MIC BIAS External1",
@@ -720,6 +745,22 @@
 		function = "pri_mi2s_ws";
 		drive-strength = <2>;
 		bias-pull-down;
+	};
+
+	speaker_left_default: speaker-left-default-state {
+		pins = "gpio48";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+		output-low;
+	};
+
+	speaker_right_default: speaker-right-default-state {
+		pins = "gpio19";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+		output-low;
 	};
 };
 
