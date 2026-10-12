@@ -220,6 +220,10 @@
 	status = "okay";
 };
 
+&mba_mem {
+	status = "okay";
+};
+
 &mdss {
 	status = "okay";
 };
@@ -252,6 +256,16 @@
 &mdss_dsi0_phy {
 	vddio-supply = <&pm8953_l6>;
 
+	status = "okay";
+};
+
+&modem {
+	pll-supply = <&pm8953_l7>;
+	status = "okay";
+};
+
+&mpss_mem {
+	reg = <0x0 0x86800000 0x0 0x5500000>;
 	status = "okay";
 };
 
