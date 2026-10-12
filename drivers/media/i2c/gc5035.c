@@ -1666,13 +1666,18 @@ static int gc5035_initialize_controls(struct gc5035 *gc5035)
 	const struct gc5035_mode *mode;
 	struct v4l2_ctrl_handler *handler;
 	struct v4l2_ctrl *ctrl;
+	struct v4l2_fwnode_device_properties props;
 	u64 exposure_max, pixel_rate;
 	u32 h_blank, vblank_def;
 	int ret;
 
+	ret = v4l2_fwnode_device_parse(&gc5035->client->dev, &props);
+	if (ret)
+		return ret;
+
 	handler = &gc5035->ctrl_handler;
 	mode = gc5035->cur_mode;
-	ret = v4l2_ctrl_handler_init(handler, 8);
+	ret = v4l2_ctrl_handler_init(handler, 10);
 	if (ret)
 		return ret;
 
@@ -1718,6 +1723,8 @@ static int gc5035_initialize_controls(struct gc5035 *gc5035)
 				     V4L2_CID_TEST_PATTERN,
 				     ARRAY_SIZE(gc5035_test_pattern_menu) - 1,
 				     0, 0, gc5035_test_pattern_menu);
+
+	v4l2_ctrl_new_fwnode_properties(handler, &gc5035_ctrl_ops, &props);
 
 	if (handler->error) {
 		ret = handler->error;
