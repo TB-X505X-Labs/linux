@@ -364,6 +364,42 @@ static const struct camss_subdev_resources csiphy_res_8x37[] = {
 	}
 };
 
+static const struct camss_subdev_resources csiphy_res_439[] = {
+	/* CSIPHY0 */
+	{
+		.regulators = {},
+		.clock = { "top_ahb", "ispif_ahb", "ahb", "csiphy0_timer" },
+		.clock_rate = { { 0 },
+				{ 0 },
+				{ 0 },
+				{ 200000000 } },
+		.reg = { "csiphy0", "csiphy0_clk_mux" },
+		.interrupt = { "csiphy0" },
+		.csiphy = {
+			.id = 0,
+			.hw_ops = &csiphy_ops_snps_10_0,
+			.formats = &csiphy_formats_8x96
+		}
+	},
+
+	/* CSIPHY1 */
+	{
+		.regulators = {},
+		.clock = { "top_ahb", "ispif_ahb", "ahb", "csiphy1_timer" },
+		.clock_rate = { { 0 },
+				{ 0 },
+				{ 0 },
+				{ 200000000 } },
+		.reg = { "csiphy1", "csiphy1_clk_mux" },
+		.interrupt = { "csiphy1" },
+		.csiphy = {
+			.id = 1,
+			.hw_ops = &csiphy_ops_snps_10_0,
+			.formats = &csiphy_formats_8x96
+		}
+	}
+};
+
 static const struct camss_subdev_resources csid_res_8x37[] = {
 	/* CSID0 */
 	{
@@ -5444,6 +5480,17 @@ static const struct camss_resources msm8937_resources = {
 	.vfe_num = ARRAY_SIZE(vfe_res_8x37),
 };
 
+static const struct camss_resources sdm439_resources = {
+	.version = CAMSS_8x37,
+	.csiphy_res = csiphy_res_439,
+	.csid_res = csid_res_8x37,
+	.ispif_res = &ispif_res_8x17,
+	.vfe_res = vfe_res_8x37,
+	.csiphy_num = ARRAY_SIZE(csiphy_res_439),
+	.csid_num = ARRAY_SIZE(csid_res_8x37),
+	.vfe_num = ARRAY_SIZE(vfe_res_8x37),
+};
+
 static const struct camss_resources msm8939_resources = {
 	.version = CAMSS_8x39,
 	.csiphy_res = csiphy_res_8x39,
@@ -5650,6 +5697,7 @@ static const struct of_device_id camss_dt_match[] = {
 	{ .compatible = "qcom,msm8916-camss", .data = &msm8916_resources },
 	{ .compatible = "qcom,msm8917-camss", .data = &msm8917_resources },
 	{ .compatible = "qcom,msm8937-camss", .data = &msm8937_resources },
+	{ .compatible = "qcom,sdm439-camss", .data = &sdm439_resources },
 	{ .compatible = "qcom,msm8939-camss", .data = &msm8939_resources },
 	{ .compatible = "qcom,msm8953-camss", .data = &msm8953_resources },
 	{ .compatible = "qcom,msm8996-camss", .data = &msm8996_resources },
