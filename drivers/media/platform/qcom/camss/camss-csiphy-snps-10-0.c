@@ -342,7 +342,7 @@ static irqreturn_t csiphy_isr(int irq, void *dev)
 		val = readl_relaxed(csiphy->base + SNPS_IRQ_STATUS_0 + 4 * i);
 		writel_relaxed(val, csiphy->base + SNPS_IRQ_CLEAR_0 + 4 * i);
 		if (val)
-			dev_err_ratelimited(csiphy->camss->dev,
+			dev_dbg(csiphy->camss->dev,
 					    "CSIPHY%d IRQ status%d 0x%x\n",
 					    csiphy->id, i, val);
 	}
@@ -351,7 +351,7 @@ static irqreturn_t csiphy_isr(int irq, void *dev)
 		val = readl_relaxed(csiphy->base + SNPS_IRQ_CLK_STATUS_0 + 4 * i);
 		writel_relaxed(val, csiphy->base + SNPS_IRQ_CLK_CLEAR_0 + 4 * i);
 		if (val)
-			dev_err_ratelimited(csiphy->camss->dev,
+			dev_dbg(csiphy->camss->dev,
 					    "CSIPHY%d IRQ clk status%d 0x%x\n",
 					    csiphy->id, i, val);
 	}
