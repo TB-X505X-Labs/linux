@@ -772,7 +772,7 @@
 
 			csiphy0_ep: endpoint {
 				clock-lanes = <7>;
-				data-lanes = <0 2>;
+				data-lanes = <0 3>;
 				remote-endpoint = <&rear_cam_ep>;
 			};
 		};
@@ -808,7 +808,7 @@
 
 		port {
 			rear_cam_ep: endpoint {
-				data-lanes = <0 2>;
+				data-lanes = <0 3>;
 				link-frequencies = /bits/ 64 <438000000>;
 				remote-endpoint = <&csiphy0_ep>;
 			};
