@@ -127,6 +127,10 @@
 	iommus = <&adreno_smmu 0>;
 };
 
+&camss {
+	compatible = "qcom,sdm439-camss";
+};
+
 &gcc {
 	compatible = "qcom,gcc-sdm439";
 };
