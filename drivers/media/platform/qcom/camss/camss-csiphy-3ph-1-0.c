@@ -964,6 +964,43 @@ static void csiphy_gen1_config_lanes(struct csiphy_device *csiphy,
 	writel_relaxed(val, csiphy->base + CSIPHY_3PH_LNn_MISC1(l));
 }
 
+static void csiphy_v3_4_2_config_lanes(struct csiphy_device *csiphy,
+				       struct csiphy_config *cfg,
+				       u8 settle_cnt)
+{
+	struct csiphy_lanes_cfg *c = &cfg->csi2->lane_cfg;
+	void __iomem *base = csiphy->base;
+	int i, l;
+	bool clk;
+
+	for (i = 0; i <= c->num_data; i++) {
+		clk = i == c->num_data;
+		l = clk ? 7 : c->data[i].pos * 2;
+
+		writel_relaxed(0x00, base + CSIPHY_3PH_LNn_CFG7(l));
+		writel_relaxed(0x01, base + CSIPHY_3PH_LNn_CFG6(l));
+		writel_relaxed(0x03, base + CSIPHY_3PH_LNn_CFG8(l));
+		writel_relaxed(clk ? CSIPHY_3PH_LNn_MISC1_IS_CLKLANE : 0,
+			       base + CSIPHY_3PH_LNn_MISC1(l));
+		writel_relaxed(0xb8, base + CSIPHY_3PH_LNn_CSI_LANE_CTRL15(l));
+		writel_relaxed(0x08, base + CSIPHY_3PH_LNn_CFG2(l));
+		writel_relaxed(settle_cnt, base + CSIPHY_3PH_LNn_CFG3(l));
+		if (clk) {
+			writel_relaxed(0x80, base + CSIPHY_3PH_LNn_CFG1(l));
+			writel_relaxed(0xff, base + CSIPHY_3PH_LNn_CFG4(l));
+		} else {
+			writel_relaxed(0x8e, base + CSIPHY_3PH_LNn_CFG1(l));
+		}
+		writel_relaxed(0x56, base + CSIPHY_3PH_LNn_CFG5(l));
+		writel_relaxed(clk ? 0x1f : 0xfe, base + CSIPHY_3PH_LNn_CFG9(l));
+		writel_relaxed(0xe7, base + CSIPHY_3PH_LNn_TEST_IMP(l));
+		writel_relaxed(0x60, base + 0x014 + 0x100 * l);
+	}
+
+	writel_relaxed(0x02, base +
+		       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(csiphy->regs->offset, 0));
+}
+
 static void csiphy_gen2_config_lanes(struct csiphy_device *csiphy,
 				     u8 settle_cnt)
 {
@@ -1060,6 +1097,8 @@ static void csiphy_lanes_enable(struct csiphy_device *csiphy,
 
 	if (csiphy_is_gen2(csiphy->camss->res->version))
 		csiphy_gen2_config_lanes(csiphy, settle_cnt);
+	else if (csiphy->camss->res->version == CAMSS_8x37)
+		csiphy_v3_4_2_config_lanes(csiphy, cfg, settle_cnt);
 	else
 		csiphy_gen1_config_lanes(csiphy, cfg, settle_cnt);
 
