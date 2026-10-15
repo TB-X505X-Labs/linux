@@ -16,6 +16,7 @@
 #include <linux/netdevice.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
+#include <linux/soc/qcom/smem.h>
 #include <linux/soc/qcom/smem_state.h>
 #include <linux/spinlock.h>
 #include <linux/wait.h>
@@ -763,6 +764,29 @@ static int __maybe_unused bam_dmux_runtime_resume(struct device *dev)
 	return 0;
 }
 
+static ssize_t smsm_show(struct device *dev, struct device_attribute *attr,
+			 char *buf)
+{
+	struct bam_dmux *dmux = dev_get_drvdata(dev);
+	size_t size;
+	u32 *state;
+	int i, len = 0;
+
+	state = qcom_smem_get(QCOM_SMEM_HOST_ANY, 85, &size);
+	if (IS_ERR(state))
+		return PTR_ERR(state);
+
+	for (i = 0; i < size / sizeof(u32); i++)
+		len += sysfs_emit_at(buf, len, "host%d 0x%08x\n", i,
+				     le32_to_cpu(state[i]));
+
+	len += sysfs_emit_at(buf, len, "pc_state %d pc_ack_state %d\n",
+			     dmux->pc_state, dmux->pc_ack_state);
+
+	return len;
+}
+static DEVICE_ATTR_RO(smsm);
+
 static int bam_dmux_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -832,6 +856,8 @@ static int bam_dmux_probe(struct platform_device *pdev)
 				    &dmux->pc_state);
 	if (ret)
 		goto err_disable_pm;
+
+	device_create_file(dev, &dev_attr_smsm);
 
 	/* Check if remote finished initialization before us */
 	if (dmux->pc_state) {
