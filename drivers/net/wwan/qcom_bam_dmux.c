@@ -785,7 +785,21 @@ static ssize_t smsm_show(struct device *dev, struct device_attribute *attr,
 
 	return len;
 }
-static DEVICE_ATTR_RO(smsm);
+static ssize_t smsm_store(struct device *dev, struct device_attribute *attr,
+			  const char *buf, size_t count)
+{
+	struct bam_dmux *dmux = dev_get_drvdata(dev);
+	u32 mask, value;
+
+	if (sscanf(buf, "%x %x", &mask, &value) != 2)
+		return -EINVAL;
+
+	qcom_smem_state_update_bits(dmux->pc, mask, value);
+	dev_info(dev, "apps smsm: mask 0x%08x value 0x%08x\n", mask, value);
+
+	return count;
+}
+static DEVICE_ATTR_RW(smsm);
 
 static int bam_dmux_probe(struct platform_device *pdev)
 {
