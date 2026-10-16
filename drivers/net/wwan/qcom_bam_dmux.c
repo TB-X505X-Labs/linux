@@ -801,6 +801,25 @@ static ssize_t smsm_store(struct device *dev, struct device_attribute *attr,
 }
 static DEVICE_ATTR_RW(smsm);
 
+static ssize_t channels_store(struct device *dev, struct device_attribute *attr,
+			      const char *buf, size_t count)
+{
+	struct bam_dmux *dmux = dev_get_drvdata(dev);
+	unsigned long mask;
+	int ch;
+
+	if (kstrtoul(buf, 16, &mask))
+		return -EINVAL;
+
+	for_each_set_bit(ch, &mask, BAM_DMUX_NUM_CH)
+		set_bit(ch, dmux->remote_channels);
+	schedule_work(&dmux->register_netdev_work);
+	dev_info(dev, "channels 0x%lx marked open\n", mask);
+
+	return count;
+}
+static DEVICE_ATTR_WO(channels);
+
 static int bam_dmux_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -872,6 +891,7 @@ static int bam_dmux_probe(struct platform_device *pdev)
 		goto err_disable_pm;
 
 	device_create_file(dev, &dev_attr_smsm);
+	device_create_file(dev, &dev_attr_channels);
 
 	/* Check if remote finished initialization before us */
 	if (dmux->pc_state) {
