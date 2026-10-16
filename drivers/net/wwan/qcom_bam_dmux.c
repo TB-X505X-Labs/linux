@@ -851,6 +851,47 @@ static ssize_t cmd_store(struct device *dev, struct device_attribute *attr,
 }
 static DEVICE_ATTR_WO(cmd);
 
+static ssize_t subscription_store(struct device *dev, struct device_attribute *attr,
+				  const char *buf, size_t count)
+{
+	unsigned int idx, value;
+	size_t size;
+	u32 *mask;
+
+	if (sscanf(buf, "%u %x", &idx, &value) != 2)
+		return -EINVAL;
+
+	mask = qcom_smem_get(QCOM_SMEM_HOST_ANY, 333, &size);
+	if (IS_ERR(mask))
+		return PTR_ERR(mask);
+	if (idx >= size / sizeof(u32))
+		return -EINVAL;
+
+	mask[idx] = cpu_to_le32(value);
+	wmb();
+	dev_info(dev, "smsm subscription[%u] = 0x%08x\n", idx, value);
+
+	return count;
+}
+
+static ssize_t subscription_show(struct device *dev, struct device_attribute *attr,
+				 char *buf)
+{
+	size_t size;
+	u32 *mask;
+	int i, len = 0;
+
+	mask = qcom_smem_get(QCOM_SMEM_HOST_ANY, 333, &size);
+	if (IS_ERR(mask))
+		return PTR_ERR(mask);
+
+	for (i = 0; i < size / sizeof(u32); i++)
+		len += sysfs_emit_at(buf, len, "%d 0x%08x\n", i, le32_to_cpu(mask[i]));
+
+	return len;
+}
+static DEVICE_ATTR_RW(subscription);
+
 static int bam_dmux_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -924,6 +965,7 @@ static int bam_dmux_probe(struct platform_device *pdev)
 	device_create_file(dev, &dev_attr_smsm);
 	device_create_file(dev, &dev_attr_channels);
 	device_create_file(dev, &dev_attr_cmd);
+	device_create_file(dev, &dev_attr_subscription);
 
 	/* Check if remote finished initialization before us */
 	if (dmux->pc_state) {
