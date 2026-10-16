@@ -227,9 +227,8 @@ bam_dmux_tx_queue(struct bam_dmux *dmux, struct sk_buff *skb)
 	return skb_dma;
 }
 
-static int bam_dmux_send_cmd(struct bam_dmux_netdev *bndev, u8 cmd)
+static int bam_dmux_send_raw(struct bam_dmux *dmux, u8 ch, u8 cmd, u8 signal)
 {
-	struct bam_dmux *dmux = bndev->dmux;
 	struct bam_dmux_skb_dma *skb_dma;
 	struct bam_dmux_hdr *hdr;
 	struct sk_buff *skb;
@@ -242,7 +241,8 @@ static int bam_dmux_send_cmd(struct bam_dmux_netdev *bndev, u8 cmd)
 	hdr = skb_put_zero(skb, sizeof(*hdr));
 	hdr->magic = BAM_DMUX_HDR_MAGIC;
 	hdr->cmd = cmd;
-	hdr->ch = bndev->ch;
+	hdr->ch = ch;
+	hdr->signal = signal;
 
 	skb_dma = bam_dmux_tx_queue(dmux, skb);
 	if (!skb_dma) {
@@ -272,6 +272,11 @@ tx_fail:
 free_skb:
 	dev_kfree_skb(skb);
 	return ret;
+}
+
+static int bam_dmux_send_cmd(struct bam_dmux_netdev *bndev, u8 cmd)
+{
+	return bam_dmux_send_raw(bndev->dmux, bndev->ch, cmd, 0);
 }
 
 static int bam_dmux_netdev_open(struct net_device *netdev)
@@ -503,6 +508,9 @@ static void bam_dmux_cmd_data(struct bam_dmux_skb_dma *skb_dma)
 	struct bam_dmux *dmux = skb_dma->dmux;
 	struct sk_buff *skb = skb_dma->skb;
 	struct bam_dmux_hdr *hdr = (struct bam_dmux_hdr *)skb->data;
+
+	dev_info_ratelimited(dmux->dev, "rx: magic %#x signal %#x cmd %u ch %u len %u\n",
+			     hdr->magic, hdr->signal, hdr->cmd, hdr->ch, hdr->len);
 	struct net_device *netdev = dmux->netdevs[hdr->ch];
 
 	if (!netdev || !netif_running(netdev)) {
@@ -826,6 +834,23 @@ static ssize_t channels_store(struct device *dev, struct device_attribute *attr,
 }
 static DEVICE_ATTR_WO(channels);
 
+static ssize_t cmd_store(struct device *dev, struct device_attribute *attr,
+			 const char *buf, size_t count)
+{
+	struct bam_dmux *dmux = dev_get_drvdata(dev);
+	unsigned int ch, cmd, signal = 0;
+	int ret;
+
+	if (sscanf(buf, "%u %u %x", &ch, &cmd, &signal) < 2)
+		return -EINVAL;
+
+	ret = bam_dmux_send_raw(dmux, ch, cmd, signal);
+	dev_info(dev, "sent cmd %u ch %u signal 0x%x: %d\n", cmd, ch, signal, ret);
+
+	return ret ? ret : count;
+}
+static DEVICE_ATTR_WO(cmd);
+
 static int bam_dmux_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -898,6 +923,7 @@ static int bam_dmux_probe(struct platform_device *pdev)
 
 	device_create_file(dev, &dev_attr_smsm);
 	device_create_file(dev, &dev_attr_channels);
+	device_create_file(dev, &dev_attr_cmd);
 
 	/* Check if remote finished initialization before us */
 	if (dmux->pc_state) {
