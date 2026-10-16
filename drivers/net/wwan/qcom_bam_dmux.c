@@ -70,7 +70,7 @@ struct bam_dmux {
 	struct device *dev;
 
 	int pc_irq;
-	bool pc_state, pc_ack_state;
+	bool pc_state, pc_ack_state, pc_voted;
 	struct qcom_smem_state *pc, *pc_ack;
 	u32 pc_mask, pc_ack_mask;
 	wait_queue_head_t pc_wait;
@@ -710,7 +710,10 @@ static int bam_dmux_runtime_suspend(struct device *dev)
 	struct bam_dmux *dmux = dev_get_drvdata(dev);
 
 	dev_dbg(dev, "runtime suspend\n");
-	bam_dmux_pc_vote(dmux, false);
+	if (dmux->pc_voted) {
+		bam_dmux_pc_vote(dmux, false);
+		dmux->pc_voted = false;
+	}
 
 	return 0;
 }
@@ -721,26 +724,29 @@ static int __maybe_unused bam_dmux_runtime_resume(struct device *dev)
 
 	dev_dbg(dev, "runtime resume\n");
 
-	/* Wait until previous power down was acked */
-	if (!wait_for_completion_timeout(&dmux->pc_ack_completion,
-					 BAM_DMUX_REMOTE_TIMEOUT))
-		return -ETIMEDOUT;
+	if (!dmux->pc_state) {
+		/* Wait until previous power down was acked */
+		if (!wait_for_completion_timeout(&dmux->pc_ack_completion,
+						 BAM_DMUX_REMOTE_TIMEOUT))
+			return -ETIMEDOUT;
 
-	/* Vote for power state */
-	bam_dmux_pc_vote(dmux, true);
+		/* Vote for power state */
+		bam_dmux_pc_vote(dmux, true);
 
-	/* Wait for ack */
-	if (!wait_for_completion_timeout(&dmux->pc_ack_completion,
-					 BAM_DMUX_REMOTE_TIMEOUT)) {
-		bam_dmux_pc_vote(dmux, false);
-		return -ETIMEDOUT;
-	}
+		/* Wait for ack */
+		if (!wait_for_completion_timeout(&dmux->pc_ack_completion,
+						 BAM_DMUX_REMOTE_TIMEOUT)) {
+			bam_dmux_pc_vote(dmux, false);
+			return -ETIMEDOUT;
+		}
 
-	/* Wait until we're up */
-	if (!wait_event_timeout(dmux->pc_wait, dmux->pc_state,
-				BAM_DMUX_REMOTE_TIMEOUT)) {
-		bam_dmux_pc_vote(dmux, false);
-		return -ETIMEDOUT;
+		/* Wait until we're up */
+		if (!wait_event_timeout(dmux->pc_wait, dmux->pc_state,
+					BAM_DMUX_REMOTE_TIMEOUT)) {
+			bam_dmux_pc_vote(dmux, false);
+			return -ETIMEDOUT;
+		}
+		dmux->pc_voted = true;
 	}
 
 	/* Ensure that we actually initialized successfully */
