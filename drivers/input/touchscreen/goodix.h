@@ -29,6 +29,7 @@
 
 #define GOODIX_REG_COMMAND			0x8040
 #define GOODIX_CMD_SCREEN_OFF			0x05
+#define GOODIX_CMD_GESTURE_DOZE			0x08
 
 #define GOODIX_REG_SW_WDT			0x8041
 
@@ -50,6 +51,7 @@
 #define GOODIX_GT1X_REG_CONFIG_DATA		0x8050
 #define GOODIX_GT9X_REG_CONFIG_DATA		0x8047
 #define GOODIX_REG_ID				0x8140
+#define GOODIX_REG_GESTURE			0x814B
 #define GOODIX_READ_COOR_ADDR			0x814E
 #define GOODIX_REG_BAK_REF			0x99D0
 
@@ -103,6 +105,7 @@ struct goodix_ts_data {
 	u8 main_clk[GOODIX_MAIN_CLK_LEN];
 	int bak_ref_len;
 	u8 *bak_ref;
+	bool in_doze;
 };
 
 int goodix_i2c_read(struct i2c_client *client, u16 reg, u8 *buf, int len);

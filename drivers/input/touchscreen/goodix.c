@@ -507,6 +507,55 @@ static void goodix_ts_work_i2c_poll(struct input_dev *input)
 	goodix_i2c_write_u8(ts->client, GOODIX_READ_COOR_ADDR, 0);
 }
 
+static struct kobject *goodix_gesture_kobj;
+static bool gesture_enable = true;
+
+static ssize_t gesture_enable_show(struct kobject *kobj,
+				   struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", gesture_enable ? 1 : 0);
+}
+
+static ssize_t gesture_enable_store(struct kobject *kobj,
+				    struct kobj_attribute *attr,
+				    const char *buf, size_t count)
+{
+	bool val;
+	int ret;
+
+	ret = kstrtobool(buf, &val);
+	if (ret)
+		return ret;
+
+	gesture_enable = val;
+	return count;
+}
+
+static struct kobj_attribute gesture_enable_attr =
+	__ATTR(gesture_enable, 0666, gesture_enable_show, gesture_enable_store);
+
+static ssize_t dev_gesture_enable_show(struct device *dev,
+				       struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", gesture_enable ? 1 : 0);
+}
+
+static ssize_t dev_gesture_enable_store(struct device *dev,
+					struct device_attribute *attr,
+					const char *buf, size_t count)
+{
+	bool val;
+	int ret;
+
+	ret = kstrtobool(buf, &val);
+	if (ret)
+		return ret;
+
+	gesture_enable = val;
+	return count;
+}
+static DEVICE_ATTR(gesture_enable, 0666, dev_gesture_enable_show, dev_gesture_enable_store);
+
 /**
  * goodix_ts_irq_handler - The IRQ handler
  *
@@ -516,6 +565,43 @@ static void goodix_ts_work_i2c_poll(struct input_dev *input)
 static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 {
 	struct goodix_ts_data *ts = dev_id;
+
+	if (ts->in_doze) {
+		u8 gesture_id = 0;
+		int error;
+
+		error = goodix_i2c_read(ts->client, GOODIX_REG_GESTURE, &gesture_id, 1);
+		if (error) {
+			dev_err(&ts->client->dev, "Failed to read gesture reg: %d\n", error);
+			return IRQ_HANDLED;
+		}
+
+		dev_dbg(&ts->client->dev, "Gesture interrupt, reg 0x814B = 0x%02x\n", gesture_id);
+
+		if (gesture_id == 0xCC || gesture_id == 0x22 ||
+		    (gesture_id != 0 && gesture_id != 0xFF)) {
+			dev_info(&ts->client->dev, "Wake gesture detected (0x%02x)\n", gesture_id);
+
+			input_report_key(ts->input_dev, KEY_WAKEUP, 1);
+			input_sync(ts->input_dev);
+			input_report_key(ts->input_dev, KEY_WAKEUP, 0);
+			input_sync(ts->input_dev);
+
+			input_report_key(ts->input_dev, 648, 1);
+			input_sync(ts->input_dev);
+			input_report_key(ts->input_dev, 648, 0);
+			input_sync(ts->input_dev);
+		} else {
+			/* Not a valid gesture, re-arm doze */
+			goodix_i2c_write_u8(ts->client, GOODIX_REG_COMMAND, GOODIX_CMD_GESTURE_DOZE);
+		}
+
+		/* Clear gesture register and coordinate status */
+		goodix_i2c_write_u8(ts->client, GOODIX_REG_GESTURE, 0x00);
+		goodix_i2c_write_u8(ts->client, GOODIX_READ_COOR_ADDR, 0x00);
+
+		return IRQ_HANDLED;
+	}
 
 	goodix_process_events(ts);
 	goodix_i2c_write_u8(ts->client, GOODIX_READ_COOR_ADDR, 0);
@@ -1232,6 +1318,10 @@ retry_read_config:
 		input_set_poll_interval(ts->input_dev, GOODIX_POLL_INTERVAL_MS);
 	}
 
+	input_set_capability(ts->input_dev, EV_KEY, KEY_WAKEUP);
+	input_set_capability(ts->input_dev, EV_KEY, 648);
+	device_init_wakeup(&ts->client->dev, true);
+
 	error = input_register_device(ts->input_dev);
 	if (error) {
 		dev_err(&ts->client->dev,
@@ -1255,6 +1345,19 @@ retry_read_config:
 	if (error) {
 		dev_err(&ts->client->dev, "request IRQ failed: %d\n", error);
 		return error;
+	}
+
+	error = device_create_file(&ts->client->dev, &dev_attr_gesture_enable);
+	if (error)
+		dev_warn(&ts->client->dev, "Failed to create gesture_enable sysfs: %d\n", error);
+
+	if (!goodix_gesture_kobj) {
+		goodix_gesture_kobj = kobject_create_and_add("goodix_gesture", NULL);
+		if (goodix_gesture_kobj) {
+			error = sysfs_create_file(goodix_gesture_kobj, &gesture_enable_attr.attr);
+			if (error)
+				dev_warn(&ts->client->dev, "Failed to create goodix_gesture sysfs file: %d\n", error);
+		}
 	}
 
 	return 0;
@@ -1420,6 +1523,12 @@ static void goodix_ts_remove(struct i2c_client *client)
 {
 	struct goodix_ts_data *ts = i2c_get_clientdata(client);
 
+	device_remove_file(&client->dev, &dev_attr_gesture_enable);
+	if (goodix_gesture_kobj) {
+		kobject_put(goodix_gesture_kobj);
+		goodix_gesture_kobj = NULL;
+	}
+
 	if (ts->load_cfg_from_disk)
 		wait_for_completion(&ts->firmware_loading_complete);
 }
@@ -1432,6 +1541,26 @@ static int goodix_suspend(struct device *dev)
 
 	if (ts->load_cfg_from_disk)
 		wait_for_completion(&ts->firmware_loading_complete);
+
+	if (gesture_enable && ts->client->irq) {
+		error = enable_irq_wake(ts->client->irq);
+		if (error) {
+			dev_err(dev, "Failed to enable irq wake: %d\n", error);
+		} else {
+			goodix_save_bak_ref(ts);
+
+			error = goodix_i2c_write_u8(ts->client, GOODIX_REG_COMMAND,
+						    GOODIX_CMD_GESTURE_DOZE);
+			if (error) {
+				dev_err(dev, "Failed to enter doze mode: %d\n", error);
+				disable_irq_wake(ts->client->irq);
+			} else {
+				ts->in_doze = true;
+				dev_dbg(dev, "Entered gesture doze mode\n");
+				return 0;
+			}
+		}
+	}
 
 	/* We need gpio pins to suspend/resume */
 	if (ts->irq_pin_access_method == IRQ_PIN_ACCESS_NONE) {
@@ -1477,6 +1606,16 @@ static int goodix_resume(struct device *dev)
 	struct goodix_ts_data *ts = i2c_get_clientdata(client);
 	u8 config_ver;
 	int error;
+
+	if (ts->in_doze) {
+		ts->in_doze = false;
+		disable_irq_wake(ts->client->irq);
+		dev_dbg(dev, "Exiting gesture doze mode\n");
+
+		goodix_i2c_write_u8(ts->client, GOODIX_REG_COMMAND, 0x00);
+		goodix_i2c_write_u8(ts->client, GOODIX_READ_COOR_ADDR, 0x00);
+		return 0;
+	}
 
 	if (ts->irq_pin_access_method == IRQ_PIN_ACCESS_NONE) {
 		goodix_enable_irq(ts);
