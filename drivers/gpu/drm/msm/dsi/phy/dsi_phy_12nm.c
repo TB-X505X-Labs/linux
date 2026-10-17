@@ -1052,8 +1052,8 @@ static int dsi_12nm_pll_restore_state(struct msm_dsi_phy *phy)
 
 	writel(cached_state->cfg0, base + DSIPHY_PLL_VCO_CTRL);
 	writel(cached_state->cfg1, base + DSIPHY_PLL_CHAR_PUMP_BIAS_CTRL);
-	writel(cached_state->postdiv3, base + DSIPHY_PLL_CTRL);
-	writel(cached_state->postdiv1, base + DSIPHY_SSC9);
+	writel(cached_state->postdiv1, base + DSIPHY_PLL_CTRL);
+	writel(cached_state->postdiv3, base + DSIPHY_SSC9);
 
 	return 0;
 }
