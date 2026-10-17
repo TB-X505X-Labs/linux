@@ -852,6 +852,10 @@
 	status = "okay";
 };
 
+&venus_mem {
+	status = "okay";
+};
+
 &wcnss {
 	vddpx-supply = <&pm8953_l5>;
 
