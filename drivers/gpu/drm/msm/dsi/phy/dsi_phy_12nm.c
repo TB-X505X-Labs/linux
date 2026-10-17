@@ -522,7 +522,6 @@ static int dsi_pll_12nm_clk_set_rate(struct clk_hw *hw, unsigned long rate,
 	unsigned int post_div_mux = 0;
 	struct dsi_pll_config config;
 	char data = 0;
-	pr_err("dsi_pll_12nm_clk_set_rate %lu\n", rate);
 	pll_12nm->vco_cached_rate = rate;
 	pll_12nm_setup_config(&config);
 
@@ -638,7 +637,6 @@ static unsigned long dsi_pll_12nm_clk_recalc_rate(struct clk_hw *hw,
 	m_div = ((m_div_11_6 << 6) | (m_div_5_0));
 	vco_rate = div_u64((ref_clk * m_div), 4);
 
-	pr_err("vco rate in recalc = %lld\n", vco_rate);
 
 	return (unsigned long)vco_rate;
 }
@@ -649,7 +647,6 @@ static int dsi_pll_12nm_vco_prepare(struct clk_hw *hw)
 	void __iomem *base = pll_12nm->phy->pll_base;
 	u32 data = 0;
 	bool locked;
-	pr_err("dsi_pll_12nm_vco_prepare\n");
 	if (unlikely(pll_12nm->phy->pll_on))
 		return 0;
 
@@ -748,7 +745,6 @@ static int dsi_pll_12nm_clk_enable(struct clk_hw *hw)
 	struct dsi_pll_12nm *pll_12nm = to_pll_12nm(hw);
 	void __iomem *base = pll_12nm->phy->pll_base;
 	u32 data = 0;
-	pr_err("dsi_pll_12nm_clk_enable\n");
 	if (unlikely(!pll_12nm->phy->pll_on))
 		return 0;
 
@@ -815,7 +811,6 @@ static int dsi_pll_12nm_postdiv_set_parent(struct clk_hw *hw, u8 index)
 	char data = 0;
 
 	long long vco_rate = clk_hw_get_rate(pll_12nm->phy->vco_hw);
-	pr_err("vco rate = %lld\n", vco_rate);
 
 	spin_lock_irqsave(lock, flags);
 
@@ -1281,7 +1276,6 @@ static int dsi_pll_12nm_init(struct msm_dsi_phy *phy)
 
 	phy->vco_hw = &pll_12nm->clk_hw;
 	long long rate = clk_hw_get_rate(phy->vco_hw);
-	pr_err("vco rate = %lld\n", rate);
 
 	return 0;
 }
