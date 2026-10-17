@@ -162,6 +162,54 @@
 		};
 	};
 
+	bat_therm_sensor: thermal-sensor-bat-therm {
+		compatible = "generic-adc-thermal";
+		#thermal-sensor-cells = <0>;
+		#io-channel-cells = <0>;
+		io-channels = <&pmi632_adc ADC5_BAT_THERM_100K_PU>;
+		io-channel-names = "sensor-channel";
+		temperature-lookup-table = <
+			65000 124285
+			60000 119444
+			55000 113888
+			50000 108636
+			45000 103214
+			40000 97812
+			35000 92500
+			30000 87173
+			25000 81730
+			20000 76166
+			15000 71052
+			10000 65581
+			5000 60200
+			0 54852
+			(-5000) 49545
+			(-10000) 44127
+			(-15000) 38750
+			(-20000) 33333
+			(-25000) 27844
+			(-30000) 22366
+			(-35000) 16846
+			(-40000) 11296>;
+	};
+
+	thermal-zones {
+		battery-thermal {
+			polling-delay-passive = <0>;
+			polling-delay = <5000>;
+
+			thermal-sensors = <&bat_therm_sensor>;
+
+			trips {
+				battery-crit {
+					temperature = <60000>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+	};
+
 	vddio_ts: vddio-ts-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "vddio_ts";
@@ -287,8 +335,9 @@
 	#cooling-cells = <2>;
 	io-channels = <&pmi632_adc ADC5_USB_IN_I>,
 		      <&pmi632_adc ADC5_USB_IN_V_16>,
-		      <&pmi632_adc ADC5_VBAT_SNS>;
-	io-channel-names = "usbin_i", "usbin_v", "vbat";
+		      <&pmi632_adc ADC5_VBAT_SNS>,
+		      <&bat_therm_sensor>;
+	io-channel-names = "usbin_i", "usbin_v", "vbat", "bat_therm";
 	monitored-battery = <&battery>;
 	qcom,batt-id-pullup-ohms = <100000>;
 	qcom,auto-recharge-microvolt = <4350000>;
