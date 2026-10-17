@@ -532,7 +532,7 @@ static ssize_t gesture_enable_store(struct kobject *kobj,
 }
 
 static struct kobj_attribute gesture_enable_attr =
-	__ATTR(gesture_enable, 0666, gesture_enable_show, gesture_enable_store);
+	__ATTR(gesture_enable, 0664, gesture_enable_show, gesture_enable_store);
 
 static ssize_t dev_gesture_enable_show(struct device *dev,
 				       struct device_attribute *attr, char *buf)
@@ -554,7 +554,7 @@ static ssize_t dev_gesture_enable_store(struct device *dev,
 	gesture_enable = val;
 	return count;
 }
-static DEVICE_ATTR(gesture_enable, 0666, dev_gesture_enable_show, dev_gesture_enable_store);
+static DEVICE_ATTR(gesture_enable, 0664, dev_gesture_enable_show, dev_gesture_enable_store);
 
 /**
  * goodix_ts_irq_handler - The IRQ handler
